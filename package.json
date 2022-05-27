@@ -1,0 +1,39 @@
+{
+  "name": "gitlike-redux",
+  "version": "0.0.1",
+  "description": "Project gitlike-redux",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "tsc",
+    "test": "jest",
+    "watch": "jest --watchAll",
+    "lint": "eslint ./src"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.5.1",
+    "@typescript-eslint/eslint-plugin": "^5.26.0",
+    "@typescript-eslint/parser": "^5.26.0",
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.5.0",
+    "import-sort-style-panta": "0.0.1",
+    "jest": "^28.1.0",
+    "prettier": "latest",
+    "prettier-plugin-import-sort": "0.0.7",
+    "ts-jest": "^28.0.3",
+    "typescript": "^4.7.2"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "importSort": {
+    ".ts, .tsx": {
+      "style": "panta",
+      "parser": "typescript"
+    },
+    ".js, .jsx": {
+      "style": "panta"
+    }
+  }
+}
