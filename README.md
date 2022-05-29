@@ -51,8 +51,6 @@ Expect possible API changes.
 
 What else is needed:
 
-- Better typing support
-- Better API for `reset()`.
 - Array handling support
 - Batching commits (`add()` call?)
 - More tests
