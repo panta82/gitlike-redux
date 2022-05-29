@@ -46,7 +46,7 @@ import { GitLikeReduxValue } from './val';
  */
 export function glrCommit<TPayload>(
   message: string,
-  payload: TPayload | GitLikeReduxValue<TPayload>,
+  payload: TPayload,
   patch?: object
 ): IReduxAction & IActionCommit<TPayload> {
   if (payload instanceof GitLikeReduxValue) {

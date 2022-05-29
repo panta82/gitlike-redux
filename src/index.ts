@@ -13,7 +13,7 @@ function glrTyped<TState>(_?: TState): {
   reducer: (state: TState | undefined, action: IReduxAction) => TState;
   commit: (
     message: string,
-    payload: TState | GitLikeReduxValue<TState>,
+    payload: TState,
     patch?: object
   ) => IReduxAction & IActionCommit<TState>;
 } {
