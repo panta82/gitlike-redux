@@ -65,14 +65,4 @@ export type IActionCommit<TValue> = {
   [path in DeepStringPath<TValue>]: ValueAtDeepStringPath<TValue, path>;
 };
 
-export type IActionReset<TValue> = {
-  '.': TValue;
-};
-
-type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T, Keys>> &
-  {
-    [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
-  }[Keys];
-
-export type IGitLikeReduxAction<TValue> = IReduxAction &
-  (RequireAtLeastOne<DeepPartial<IActionCommit<TValue>>> | IActionReset<TValue>);
+export type IGitLikeReduxAction<TValue> = IReduxAction & DeepPartial<IActionCommit<TValue>>;

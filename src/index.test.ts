@@ -1,6 +1,6 @@
 import { createStore } from 'redux';
 
-import { commit, reducer, reset, val } from './index';
+import { commit, reducer, val } from './index';
 import { IGitLikeReduxAction } from './types';
 
 interface IUser {
@@ -20,21 +20,57 @@ interface IState {
 }
 
 describe('GitLikeRedux', () => {
+  it('example from README works', () => {
+    // noinspection JSDeprecatedSymbols
+    const store = createStore(reducer);
+
+    store.dispatch(
+      commit(
+        'Initial state',
+        val({
+          initialized: false,
+          config: {
+            theme: 'light',
+          },
+        })
+      )
+    );
+
+    store.dispatch(
+      commit('Initialize and set dark mode', {
+        initialized: val(true),
+        config: {
+          theme: val('dark'),
+        },
+      })
+    );
+
+    expect(store.getState()).toEqual({
+      config: {
+        theme: 'dark',
+      },
+      initialized: true,
+    });
+  });
+
   it('works on a basic level', () => {
     // noinspection JSDeprecatedSymbols
     const store = createStore<IState, IGitLikeReduxAction<IState>, unknown, unknown>(reducer);
 
     store.dispatch(
-      reset('Initial state', {
-        initialized: true,
-        config: {
-          theme: 'light' as const,
-          permissions: {
-            byPage: {},
+      commit(
+        'Initial state',
+        val({
+          initialized: true,
+          config: {
+            theme: 'light' as const,
+            permissions: {
+              byPage: {},
+            },
           },
-        },
-        users: {},
-      })
+          users: {},
+        })
+      )
     );
 
     expect(store.getState()).toEqual({
@@ -145,5 +181,25 @@ describe('GitLikeRedux', () => {
         },
       },
     });
+  });
+
+  it('can commit an initial state using commit("...", val(state))', () => {
+    // noinspection JSDeprecatedSymbols
+    const store = createStore<IState, IGitLikeReduxAction<IState>, unknown, unknown>(reducer);
+    store.dispatch(
+      commit(
+        'Initial state',
+        val({
+          initialized: true,
+          config: {
+            theme: 'light' as const,
+            permissions: {
+              byPage: {},
+            },
+          },
+          users: {},
+        })
+      )
+    );
   });
 });

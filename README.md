@@ -16,17 +16,17 @@ Basic example:
 
 ```typescript
 import { createStore } from 'redux';
-import { reducer, reset, commit, val } from 'gitlike-redux';
+import { reducer, commit, val } from 'gitlike-redux';
 
 const store = createStore(reducer);
 
 store.dispatch(
-  reset('Initial state', {
+  commit('Initial state', val({
     initialized: false,
     config: {
       theme: 'light',
     }
-  })
+  }))
 );
 
 store.dispatch(

@@ -1,5 +1,5 @@
 import { handleError } from './errors';
-import { IActionCommit, IActionReset, IReduxAction } from './types';
+import { IActionCommit, IReduxAction } from './types';
 import { isObjectLike } from './utils';
 import { GitLikeReduxValue } from './val';
 
@@ -26,9 +26,17 @@ import { GitLikeReduxValue } from './val';
  */
 export function glrCommit<TPayload>(
   message: string,
-  payload: TPayload,
+  payload: TPayload | GitLikeReduxValue<TPayload>,
   patch?: object
 ): IReduxAction & IActionCommit<TPayload> {
+  if (payload instanceof GitLikeReduxValue) {
+    // Replace the entire state. A special case
+    return {
+      type: message,
+      '.': payload.value,
+    } as any;
+  }
+
   const result = {
     type: message,
     ...patch,
@@ -60,25 +68,11 @@ export function glrCommit<TPayload>(
         digIn(val, path + key + '.');
       } else {
         // We have reached a value we don't know what to do with
-        handleError(`You cannot commit value at ${path + key} without wrapping it into val()`, {
+        handleError(`You cannot commit value at "${path + key}" without wrapping it into val()`, {
           message,
           payload,
         });
       }
     }
   }
-}
-
-/**
- * Set the entire store to the given object. Suitable for the store initialization.
- * Payload doesn't need to be wrapped in val().
- */
-export function glrReset<TState>(
-  message: string,
-  payload: TState
-): IReduxAction & IActionReset<TState> {
-  return {
-    type: message,
-    '.': payload,
-  };
 }

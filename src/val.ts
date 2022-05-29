@@ -1,10 +1,10 @@
 import { AnyRecord, StringKeys } from './types';
 
-export class GitLikeReduxValue {
+export class GitLikeReduxValue<TValue = any> {
   public ignore = false;
-  public value: any;
+  public value: TValue;
 
-  constructor(value: any) {
+  constructor(value: TValue) {
     this.value = value;
   }
 }
