@@ -1,6 +1,6 @@
 {
   "name": "gitlike-redux",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Use redux like git",
   "scripts": {
     "clean": "rm -rf dist",
