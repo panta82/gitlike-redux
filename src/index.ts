@@ -1,5 +1,3 @@
-import { DeepPartial } from 'redux';
-
 import { glrCommit as commit } from './actions';
 import { glrSetErrorHandler as setErrorHandler } from './errors';
 import { glrReducer as reducer } from './reducer';
@@ -11,20 +9,18 @@ import { GitLikeReduxValue, glrVal as val } from './val';
  * Give it your initial state object or use as a generic parameter.
  * It returns the same instances you'd get directly from the library, they are just better typed.
  */
-function setupGLRTypes<TState>(_?: TState): {
+function glrTyped<TState>(_?: TState): {
   reducer: (state: TState | undefined, action: IReduxAction) => TState;
   commit: (
     message: string,
     payload: TState | GitLikeReduxValue<TState>,
     patch?: object
   ) => IReduxAction & IActionCommit<TState>;
-  val: <TValue extends DeepPartial<TState>>(payload: TValue) => TValue;
 } {
   return {
     reducer,
     commit,
-    val,
   };
 }
 
-export { setupGLRTypes, commit, val, reducer, setErrorHandler };
+export { glrTyped, commit, val, reducer, setErrorHandler };
