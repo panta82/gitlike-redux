@@ -84,7 +84,7 @@ function shallowDeepSet(
     if (replacedTargets) {
       replacedTargets.add(target[key]);
     }
-  } else if (isPlainObject(target) && target[key] === undefined) {
+  } else if (isPlainObject(target) && (target[key] === undefined || target[key] === null)) {
     // We will allow you to create a series of POJO-s if none exist yet.
     target[key] = {};
     if (replacedTargets) {

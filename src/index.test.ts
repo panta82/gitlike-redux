@@ -202,4 +202,70 @@ describe('GitLikeRedux', () => {
       )
     );
   });
+
+  it('can create objects at dot path for null and undefined root', () => {
+    // noinspection JSDeprecatedSymbols
+    const store = createStore<IState, IGitLikeReduxAction<IState>, unknown, unknown>(reducer);
+    store.dispatch(
+      commit(
+        'Initial',
+        val({
+          a: undefined,
+          b: null,
+          c: false,
+          d: '',
+          e: NaN,
+        })
+      )
+    );
+
+    store.dispatch(
+      commit(
+        'Deep set',
+        {
+          a: {
+            x: {
+              x1: val(123)
+            },
+            y: val({
+              y1: 456,
+              y2: 789
+            })
+          },
+          b: {
+            z: val({}),
+          }
+        }
+      )
+    );
+
+    expect(store.getState()).toEqual({
+      a: {
+        x: {
+          x1: 123
+        },
+        y: {
+          y1: 456,
+          y2: 789
+        }
+      },
+      b: {
+        z: {}
+      },
+      c: false,
+      d: '',
+      e: NaN,
+    });
+
+    for (const key of ['c', 'd', 'e']) {
+      expect(() => store.dispatch(
+        commit(
+          'Failed deep set',
+          {
+            [key]: {x: val(1)}
+          }
+        )
+      )).toThrow(`Couldn't update store at path ${key}.x`);
+    }
+  });
 });
