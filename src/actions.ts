@@ -78,9 +78,14 @@ export function glrCommit<TPayload>(
 
       const val = ob[key];
       if (val instanceof GitLikeReduxValue) {
-        // This is where we stop
-        if (!val.ignore) {
-          result[path + key] = val.value;
+        if (val.partial) {
+          // We will continue digging in, but only if there's an object already at this place (signified by "!")
+          digIn(val.value, path + key + '!');
+        } else {
+          // This is where we stop
+          if (!val.ignore) {
+            result[path + key] = val.value;
+          }
         }
       } else if (isObjectLike(val)) {
         // Dig in

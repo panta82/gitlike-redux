@@ -6,6 +6,11 @@ import { IGitLikeReduxAction } from './types';
 interface IUser {
   id: string;
   name: string;
+  isAdmin?: boolean;
+  preferences?: {
+    favoriteColor: string;
+    favoriteFood: string;
+  };
 }
 
 interface IState {
@@ -91,7 +96,7 @@ describe('GitLikeRedux', () => {
     );
     store.dispatch(
       commit('Add "Jack" and "Jill"', {
-        users: val.patchify([
+        users: val.patchList([
           {
             id: '1',
             name: 'Jack',
@@ -220,37 +225,34 @@ describe('GitLikeRedux', () => {
     );
 
     store.dispatch(
-      commit(
-        'Deep set',
-        {
-          a: {
-            x: {
-              x1: val(123)
-            },
-            y: val({
-              y1: 456,
-              y2: 789
-            })
+      commit('Deep set', {
+        a: {
+          x: {
+            x1: val(123),
           },
-          b: {
-            z: val({}),
-          }
-        }
-      )
+          y: val({
+            y1: 456,
+            y2: 789,
+          }),
+        },
+        b: {
+          z: val({}),
+        },
+      })
     );
 
     expect(store.getState()).toEqual({
       a: {
         x: {
-          x1: 123
+          x1: 123,
         },
         y: {
           y1: 456,
-          y2: 789
-        }
+          y2: 789,
+        },
       },
       b: {
-        z: {}
+        z: {},
       },
       c: false,
       d: '',
@@ -258,14 +260,87 @@ describe('GitLikeRedux', () => {
     });
 
     for (const key of ['c', 'd', 'e']) {
-      expect(() => store.dispatch(
-        commit(
-          'Failed deep set',
-          {
-            [key]: {x: val(1)}
-          }
+      expect(() =>
+        store.dispatch(
+          commit('Failed deep set', {
+            [key]: { x: val(1) },
+          })
         )
-      )).toThrow(`Couldn't update store at path ${key}.x`);
+      ).toThrow(`Couldn't update store at path ${key}.x`);
     }
+  });
+
+  it('can use enforced partial updates to avoid creating half-objects', () => {
+    // noinspection JSDeprecatedSymbols
+    const store = createStore<IState, IGitLikeReduxAction<IState>, unknown, unknown>(reducer);
+    store.dispatch(
+      commit(
+        'Initial',
+        val({
+          users: {
+            a: {
+              id: 'a',
+              name: 'John Doe',
+              isAdmin: false,
+              preferences: {
+                favoriteColor: 'Red',
+                favoriteFood: 'Apple',
+              },
+            },
+            b: {
+              id: 'b',
+              name: 'Jane Doe',
+              isAdmin: false,
+              preferences: null,
+            },
+          },
+        })
+      )
+    );
+
+    store.dispatch(
+      commit(`Make everyone a black-loving admin`, {
+        users: {
+          a: val.partial({
+            isAdmin: val(true),
+            preferences: val.partial({
+              favoriteColor: val('Black'),
+            }),
+          }),
+          b: val.partial({
+            isAdmin: val(true),
+            preferences: val.partial({
+              favoriteColor: val('Black'),
+            }),
+          }),
+          c: val.partial({
+            isAdmin: val(true),
+            preferences: val.partial({
+              favoriteColor: val('Black'),
+            }),
+          }),
+        },
+      })
+    );
+
+    expect(store.getState()).toEqual({
+      users: {
+        a: {
+          id: 'a',
+          name: 'John Doe',
+          isAdmin: true,
+          preferences: {
+            favoriteColor: 'Black',
+            favoriteFood: 'Apple',
+          },
+        },
+        b: {
+          id: 'b',
+          name: 'Jane Doe',
+          isAdmin: true,
+          preferences: null,
+        },
+      },
+    });
   });
 });

@@ -2,6 +2,7 @@ import { AnyRecord, StringKeys } from './types';
 
 export class GitLikeReduxValue<TValue = any> {
   public ignore = false;
+  public partial = false;
   public value: TValue;
 
   constructor(value: TValue) {
@@ -30,7 +31,7 @@ glrVal.ignore.ignore = true;
 /**
  * Turn a list of items into a patch to be applied to the target store.
  * @example
- *   commit('Add users', val.patchify([
+ *   commit('Add users', val.patchList([
  *     { id: 1, name: 'Jack' },
  *     { id: 2, name: 'Jill' }
  *    ], 'id');
@@ -40,7 +41,7 @@ glrVal.ignore.ignore = true;
  *   //    '2': val({ id: 2, name: 'Jill' })
  *   //   }
  */
-glrVal.patchify = <T extends AnyRecord, TKey extends StringKeys<T>>(
+glrVal.patchList = <T extends AnyRecord, TKey extends StringKeys<T>>(
   items: T[],
   keyProp: TKey = 'id' as any
 ): { [key: string]: T } => {
@@ -69,5 +70,16 @@ glrVal.patchMap = <T extends object>(patch: T): T => {
       result[key] = glrVal(patch[key]);
     }
   }
+  return result;
+};
+
+/**
+ * Indicate the wrapped value must be applied as a partial patch.
+ * If the object doesn't already exist at this location, the new one will not be created.
+ * The patch will just fail silently.
+ */
+glrVal.partial = <T extends object>(partialPatch: T): T => {
+  const result = new GitLikeReduxValue(partialPatch) as any;
+  result.partial = true;
   return result;
 };

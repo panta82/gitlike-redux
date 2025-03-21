@@ -2,6 +2,51 @@ import { handleError } from './errors';
 import { AnyRecord, IReduxAction } from './types';
 import { isPlainObject } from './utils';
 
+type IPathSegment = string | [value: string, mustExist: boolean];
+
+export function keyToPathSegments(key: string): IPathSegment[] {
+  const result: IPathSegment[] = [];
+  let fromIndex = 0;
+
+  for (let i = 0; i < key.length; i++) {
+    const isDot = key[i] === '.';
+    const isBang = key[i] === '!';
+
+    if (isDot || isBang) {
+      const segment = key.slice(fromIndex, i);
+      if (isBang) {
+        result.push([segment, true]);
+      } else {
+        result.push(segment);
+      }
+      fromIndex = i + 1;
+    }
+  }
+
+  if (fromIndex < key.length) {
+    result.push(key.slice(fromIndex));
+  }
+
+  return result;
+}
+
+function pathSegmentsToKey(segments: IPathSegment[]): string {
+  return segments
+    .map((segment, index) => {
+      let prefix = '';
+      let value = '';
+      if (typeof segment === 'string') {
+        value = segment;
+        prefix = '.';
+      } else {
+        value = segment[0];
+        prefix = segment[1] ? '!' : '.';
+      }
+      return index === 0 ? value : prefix + value;
+    })
+    .join('');
+}
+
 export function glrReducer<TState extends AnyRecord>(
   state: TState | undefined,
   action: IReduxAction
@@ -21,15 +66,19 @@ export function glrReducer<TState extends AnyRecord>(
         // Special case. Just replace the entire store with this object
         Object.assign(state, action[key]);
       } else {
-        const path = key.split('.');
-        const failureInfo = shallowDeepSet(state, path, action[key], replacedTargets);
+        const failureInfo = shallowDeepSet(
+          state,
+          keyToPathSegments(key),
+          action[key],
+          replacedTargets
+        );
         if (failureInfo) {
           handleError(
-            `Couldn't update store at path ${failureInfo.path.join(
-              '.'
-            )}. Search has ended at path ${failureInfo.path
-              .slice(0, failureInfo.pathIndex)
-              .join('.')}. This is likely due to not using "val()" wrapper or a corrupted store.`,
+            `Couldn't update store at path ${pathSegmentsToKey(
+              failureInfo.path
+            )}. Search has ended at path ${pathSegmentsToKey(
+              failureInfo.path.slice(0, failureInfo.pathIndex)
+            )}. This is likely due to not using "val()" wrapper or a corrupted store.`,
             failureInfo
           );
         }
@@ -48,16 +97,18 @@ export function glrReducer<TState extends AnyRecord>(
  */
 function shallowDeepSet(
   target: object,
-  path: string[] | string,
+  path: IPathSegment[],
   value: any,
   replacedTargets?: Set<any>,
   pathIndex = 0
-): null | { path: string[]; pathIndex: number; target: object; value: any } {
+): null | { path: IPathSegment[]; pathIndex: number; target: object; value: any } {
   if (typeof path === 'string') {
     path = [path];
   }
 
-  const key = path[pathIndex];
+  const segment = path[pathIndex];
+  const key = typeof segment === 'string' ? segment : segment[0];
+  const mustExist = typeof segment === 'string' ? false : segment[1];
   if (pathIndex >= path.length - 1) {
     // There is no more path to follow. Set the value here
     if (value !== undefined) {
@@ -85,6 +136,10 @@ function shallowDeepSet(
       replacedTargets.add(target[key]);
     }
   } else if (isPlainObject(target) && (target[key] === undefined || target[key] === null)) {
+    if (mustExist) {
+      // We can't create a new object here. We need to stop.
+      return null;
+    }
     // We will allow you to create a series of POJO-s if none exist yet.
     target[key] = {};
     if (replacedTargets) {
