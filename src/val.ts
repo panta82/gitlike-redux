@@ -16,7 +16,8 @@ export class GitLikeReduxValue<TValue = any> {
  *   commit('my message', { x: val(something) });
  */
 export function glrVal<T>(value: T): T {
-  return new GitLikeReduxValue(value) as any as T;
+  // No duplicate wrapping
+  return value instanceof GitLikeReduxValue ? value : (new GitLikeReduxValue(value) as any as T);
 }
 
 /**
@@ -63,10 +64,7 @@ glrVal.patchList = <T extends AnyRecord, TKey extends StringKeys<T>>(
 glrVal.patchMap = <T extends object>(patch: T): T => {
   const result = {} as T;
   for (const key in patch) {
-    if (
-      Object.prototype.hasOwnProperty.call(patch, key) &&
-      !(patch[key] instanceof GitLikeReduxValue)
-    ) {
+    if (Object.prototype.hasOwnProperty.call(patch, key)) {
       result[key] = glrVal(patch[key]);
     }
   }
