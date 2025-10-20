@@ -15,33 +15,60 @@ export class GitLikeReduxValue<TValue = any> {
  * @example
  *   commit('my message', { x: val(something) });
  */
-export function glrVal<T>(value: T): T {
+export type IGLRValFn = {
+  <T>(value: T): T;
+
+  /**
+   * If you want value to be ignored, you can pass this.
+   * Useful for ternary expressions.
+   * @example
+   *    commit('set x maybe', { x: enabled ? val('value to set') : val.ignore });
+   */
+  ignore: any;
+
+  /**
+   * Turn a list of items into a patch to be applied to the target store.
+   * @example
+   *   commit('Add users', val.patchList([
+   *     { id: 1, name: 'Jack' },
+   *     { id: 2, name: 'Jill' }
+   *    ], 'id');
+   *   // =>
+   *   //   {
+   *   //    '1': val({ id: 1, name: 'Jack' }),
+   *   //    '2': val({ id: 2, name: 'Jill' })
+   *   //   }
+   */
+  patchList<T extends AnyRecord, TKey extends StringKeys<T>>(
+    items: T[],
+    keyProp?: TKey
+  ): { [key: string]: T };
+
+  /**
+   * Wrap every property of given object into val().
+   * @example
+   *  commit('Update user', val.patchMap({id: 5, name: 'John'}));
+   *  // =>
+   *  // { id: val(5), name: val('John') }
+   */
+  patchMap<T extends object>(patch: T): T;
+
+  /**
+   * Indicate the wrapped value must be applied as a partial patch.
+   * If the object doesn't already exist at this location, the new one will not be created.
+   * The patch will just fail silently.
+   */
+  partial<T extends object>(partialPatch: T): T;
+};
+
+export const glrVal: IGLRValFn = function <T>(value: T): T {
   // No duplicate wrapping
   return value instanceof GitLikeReduxValue ? value : (new GitLikeReduxValue(value) as any as T);
-}
+} as any;
 
-/**
- * If you want value to be ignored, you can pass this.
- * Useful for ternary expressions.
- * @example
- *    commit('set x maybe', { x: enabled ? val('value to set') : val.ignore });
- */
 glrVal.ignore = new GitLikeReduxValue(undefined) as any;
 glrVal.ignore.ignore = true;
 
-/**
- * Turn a list of items into a patch to be applied to the target store.
- * @example
- *   commit('Add users', val.patchList([
- *     { id: 1, name: 'Jack' },
- *     { id: 2, name: 'Jill' }
- *    ], 'id');
- *   // =>
- *   //   {
- *   //    '1': val({ id: 1, name: 'Jack' }),
- *   //    '2': val({ id: 2, name: 'Jill' })
- *   //   }
- */
 glrVal.patchList = <T extends AnyRecord, TKey extends StringKeys<T>>(
   items: T[],
   keyProp: TKey = 'id' as any
@@ -54,13 +81,6 @@ glrVal.patchList = <T extends AnyRecord, TKey extends StringKeys<T>>(
   return patch;
 };
 
-/**
- * Wrap every property of given object into val().
- * @example
- *  commit('Update user', val.patchMap({id: 5, name: 'John'}));
- *  // =>
- *  // { id: val(5), name: val('John') }
- */
 glrVal.patchMap = <T extends object>(patch: T): T => {
   const result = {} as T;
   for (const key in patch) {
@@ -71,11 +91,6 @@ glrVal.patchMap = <T extends object>(patch: T): T => {
   return result;
 };
 
-/**
- * Indicate the wrapped value must be applied as a partial patch.
- * If the object doesn't already exist at this location, the new one will not be created.
- * The patch will just fail silently.
- */
 glrVal.partial = <T extends object>(partialPatch: T): T => {
   const result = new GitLikeReduxValue(partialPatch) as any;
   result.partial = true;
